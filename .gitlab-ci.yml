@@ -1,24 +1,76 @@
+# Pipeline stages
 stages:
-- build
-- test
-- mirror # <-- newly added
-- deploy
+- build # Build artefacts (if any)
+- test # Linting and unit tests
+- deploy # Manual deploy (optional)
 
-mirror_to_github_private:
-  stage: mirror
+# Global cache for pip
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: pip-cache
+  paths:
+  - $PIP_CACHE_DIR
+
+# Default Python job settings
+.default_python_job: &default_python_job
+  image: python:3.12
+  before_script:
+  # Upgrade pip and install project dependencies
+  - python -m pip install --quiet --upgrade pip
+  - pip install --cache-dir "$PIP_CACHE_DIR" -r requirements.txt
+
+# -----------------------------------------------------------------------------
+# BUILD JOB (placeholder)
+# -----------------------------------------------------------------------------
+build_app:
+  stage: build
+  <<: *default_python_job
+  script:
+  - echo "🔨 No build step defined; add Docker/packaging commands if needed"
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+    - dist/ # adjust if you build wheels or similar
+    - docker-image.tar
+
+# -----------------------------------------------------------------------------
+# LINT + UNIT TESTS
+# -----------------------------------------------------------------------------
+lint_and_tests:
+  stage: test
+  <<: *default_python_job
+  script:
+  # Lint with ruff
+  - pip install ruff
+  - echo "🔍 Running linter..."
+  - ruff check src
+  - ruff format --check src
+
+  # Run unit tests (if present)
+  - pip install pytest
+  - echo "✅ Running tests..."
+  - pytest --maxfail=1 --disable-warnings -q
+  # Collect caches/artifacts for failures
+  artifacts:
+    when: on_failure
+    expire_in: 1 week
+    paths:
+    - .pytest_cache/
+    - .ruff_cache/
+
+# -----------------------------------------------------------------------------
+# OPTIONAL DEPLOY (manual)
+# -----------------------------------------------------------------------------
+deploy_prod:
+  stage: deploy
+  needs:
+  - lint_and_tests
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
-    when: always
+    when: manual
   - when: never
-  before_script:
-  - mkdir -p ~/.ssh
-  - echo "$GITHUB_SSH_KEY" > ~/.ssh/id_rsa
-  - chmod 600 ~/.ssh/id_rsa
-  - ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-  - git config user.name "Bishwo"
-  - git config user.email "bishwo-bijaya.shah@stud.uni-bamberg.de"
-  - git remote remove github || true
-  - git remote add origin https://github.com/bishwothakuri/adaptive-incentives-crowdsensing.git
   script:
-  - git push --force github HEAD:main
-  - git push --force github --tags
+  - echo "🚀 Deploying project (add your deploy commands)"
