@@ -5,7 +5,7 @@ import geopandas as gpd
 
 def clean_points(
     gdf_points,
-    db_col="noise_level",  # default now points to correct column
+    db_col="noise_level",
     min_db=30,
     max_db=120,
     max_accuracy=15,
