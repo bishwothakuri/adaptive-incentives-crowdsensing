@@ -1,6 +1,5 @@
 # Pipeline stages
 stages:
-- build # Build artefacts (if any)
 - test # Linting and unit tests
 - deploy # Manual deploy (optional)
 
@@ -20,21 +19,6 @@ cache:
   # Upgrade pip and install project dependencies
   - python -m pip install --quiet --upgrade pip
   - pip install --cache-dir "$PIP_CACHE_DIR" -r requirements.txt
-
-# -----------------------------------------------------------------------------
-# BUILD JOB (placeholder)
-# -----------------------------------------------------------------------------
-build_app:
-  stage: build
-  <<: *default_python_job
-  script:
-  - echo "🔨 No build step defined; add Docker/packaging commands if needed"
-  artifacts:
-    when: always
-    expire_in: 1 week
-    paths:
-    - dist/ # adjust if you build wheels or similar
-    - docker-image.tar
 
 # -----------------------------------------------------------------------------
 # LINT + UNIT TESTS
