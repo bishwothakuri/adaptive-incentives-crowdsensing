@@ -1,32 +1,38 @@
 from __future__ import annotations
 
+import logging
+
 import matplotlib.pyplot as plt
 
 from src import config
 from src import loader
 from src import preprocessing
 from src.simulation.static_simulation import run as run_static
+from src.utils.logging_config import configure_logging
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 def run():
     # Step 1: Load data
-    print("\nLoading GeoJSON files...")
+    logger.info("Loading GeoJSON files...")
     areas, points, _ = loader.load_data(
         config.AREA_PATH, config.POINT_PATH, config.TRACK_PATH
     )
 
     # Step 2: Inspect data structure
-    print("\n--- AREA COLUMNS ---")
-    print(areas.columns.tolist())
-    print(areas.head())
+    logger.info("--- AREA COLUMNS ---")
+    logger.info(areas.columns.tolist())
+    logger.info(areas.head())
 
-    print("\n--- POINT COLUMNS ---")
-    print(points.columns.tolist())
-    print(points.head())
+    logger.info("--- POINT COLUMNS ---")
+    logger.info(points.columns.tolist())
+    logger.info(points.head())
 
     # Step 3: Clean noise points
     points_cleaned = preprocessing.clean_points(points, db_col="noise_level")
-    print(f"\nCleaned noise points: {len(points_cleaned)}")
+    logger.info(f"Cleaned noise points: {len(points_cleaned)}")
 
     # Step 4: Apply CRS consistency
     areas, points_cleaned = preprocessing.apply_crs(
@@ -37,11 +43,11 @@ def run():
     enriched_areas = preprocessing.assign_points_to_areas(
         points_cleaned, areas
     )
-    print("\nAssigned measure counts per area:")
-    print(enriched_areas[["measure_count"]].describe())
+    logger.info("Assigned measure counts per area:")
+    logger.info(enriched_areas[["measure_count"]].describe())
 
     # Step 6: Plot data for inspection
-    print("\nPlotting raw data...")
+    logger.info("Plotting raw data...")
 
     areas.plot(edgecolor="black", facecolor="none")
     plt.title("Grid Areas (Raw)")
@@ -59,7 +65,6 @@ def run():
     plt.show()
 
     # Step 7: Save cleaned and enriched areas
-    # Fix geometries before saving (ensures compatibility)
     enriched_areas["geometry"] = enriched_areas["geometry"].buffer(0)
     enriched_areas.to_file(
         "output/cleaned_bamberg_areas.geojson", driver="GeoJSON"
@@ -67,10 +72,10 @@ def run():
     enriched_areas.drop(columns="geometry").to_csv(
         "output/grid_summary.csv", index=False
     )
-    print("\nSaved cleaned data to output")
+    logger.info("Saved cleaned data to output")
 
     # --- Static Incentive Simulation ---
-    print("\nRunning static incentive simulation...")
+    logger.info("Running static incentive simulation...")
     sim_results = run_static(
         areas=enriched_areas,
         num_users=500,
@@ -79,10 +84,10 @@ def run():
     )
 
     # Print simulation outputs
-    print("\nStatic Simulation Results:")
-    print("Total payout: €", sim_results["total_payout"])
-    print("New submissions summary:")
-    print(sim_results["new_submissions"].describe())
+    logger.info("Static Simulation Results:")
+    logger.info(f"Total payout: € {sim_results['total_payout']}")
+    logger.info("New submissions summary:")
+    logger.info(sim_results["new_submissions"].describe())
 
     # Plot new submissions per cell
     plt.figure(figsize=(10, 4))
