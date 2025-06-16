@@ -1,0 +1,21 @@
+# Core packages
+geopandas==0.14.3
+pandas==2.2.2
+numpy==1.26.4
+
+# Plotting and visualization
+matplotlib==3.8.4
+seaborn==0.13.2
+
+# Spatial dependencies (GeoPandas needs these)
+shapely==2.0.3
+fiona==1.9.6
+pyproj==3.6.1
+rtree==1.2.0
+
+# Scientific utilities
+scikit-learn==1.4.2
+scipy==1.13.1
+
+# Simulations or bandits
+tqdm==4.66.4
