@@ -1,0 +1,18 @@
+mirror_to_github_private:
+  stage: mirror
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "public"' # or your branch
+    when: always
+  - when: never
+  before_script:
+  - mkdir -p ~/.ssh
+  - echo "$GITHUB_SSH_KEY" > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+  - git config user.name "Bishwo"
+  - git config user.email "bishwo-bijaya.shah@stud.uni-bamberg.de"
+  - git remote remove github || true
+  - git remote add origin https://github.com/bishwothakuri/adaptive-incentives-crowdsensing.git
+  script:
+  - git push --force github HEAD:main
+  - git push --force github --tags
