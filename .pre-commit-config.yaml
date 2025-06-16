@@ -1,4 +1,5 @@
 repos:
+# Common fixes: trailing whitespace, final newline, YAML syntax, debug statements
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v5.0.0
   hooks:
@@ -7,20 +8,34 @@ repos:
   - id: check-yaml
   - id: debug-statements
 
+# Reorder imports to PEP8 order
 - repo: https://github.com/asottile/reorder-python-imports
   rev: v3.15.0
   hooks:
   - id: reorder-python-imports
-    exclude: ^(pre_commit/resources/|testing/resources/python3_hooks_repo/)
+    exclude: '^(pre_commit/resources/|testing/resources/python3_hooks_repo/)'
     args: [ --py39-plus, --add-import, 'from __future__ import annotations' ]
 
+# Upgrade Python syntax to 3.9+ features
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.20.0
   hooks:
   - id: pyupgrade
     args: [ --py39-plus ]
 
-- repo: https://github.com/PyCQA/flake8
+# Fast linting and formatting with Ruff (auto-fix enabled)
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.11.13
+  hooks:
+  # Run the linter.
+  - id: ruff-check
+    args: [ --fix ]
+  # Run the formatter.
+  - id: ruff-format
+
+# Final style checks with Flake8
+- repo: https://github.com/pycqa/flake8
   rev: 7.2.0
   hooks:
   - id: flake8
